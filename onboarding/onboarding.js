@@ -48,4 +48,67 @@
 
   /** @param {string|null} id @returns {Civilization|undefined} */
   const civById=id=>data.CIVILIZATIONS.find(c=>c.id===id);
-  /** @param {string|null} id @returns {StartingRegion|undefin
+  /** @param {string|null} id @returns {StartingRegion|undefined} */
+  const regionById=id=>data.REGIONS.find(r=>r.id===id);
+
+  const stepIndex=()=>Math.max(0,STEPS.findIndex(s=>s.id===ui.draft.step));
+
+  /** @param {number} value @param {'percent'|'flat'} unit */
+  function formatBonus(value,unit){
+    const sign=value>0?'+':'';
+    return unit==='percent'?`${sign}${value}%`:`${sign}${value}`;
+  }
+
+  /** @param {number} mod */
+  function formatModifier(mod){
+    const pct=Math.round(mod*100);
+    return `${pct>0?'+':''}${pct}%`;
+  }
+
+  function persist(){ store.repository.saveDraft(ui.draft); }
+
+  /** @returns {string|null} error for the current step */
+  function stepError(){
+    const d=ui.draft;
+    switch(d.step){
+      case 'commander': return store.validateCommanderName(d.commanderName);
+      case 'kingdom': return store.validateKingdomName(d.kingdomName);
+      case 'civilization': return d.civilizationId?null:'Devam etmek için bir medeniyet seç.';
+      case 'region': return d.regionId?null:'Devam etmek için bir bölge seç.';
+      default: return null;
+    }
+  }
+
+  function suggestKingdomName(){
+    const {first,second}=data.KINGDOM_NAME_PARTS;
+    const pick=/** @param {string[]} a */a=>a[Math.floor(Math.random()*a.length)];
+    return `${pick(first)} ${pick(second)}`;
+  }
+
+  // ---------- banner (live preview) ----------
+
+  function bannerHtml(){
+    const d=ui.draft;
+    const civ=civById(d.civilizationId);
+    const region=regionById(d.regionId);
+    const idx=stepIndex();
+    return `
+      <div class="ob-banner" style="--banner:${civ?civ.color:'#2c4034'}">
+        <div class="ob-pennant">
+          <span class="ob-pennant-emblem" aria-hidden="true">${civ?esc(civ.emblem):'♜'}</span>
+          <strong class="ob-pennant-name" data-live="kingdom">${esc(d.kingdomName.trim()||'Adsız krallık')}</strong>
+          <span class="ob-pennant-meta" data-live="commander">${esc(d.commanderName.trim()||'Komutan')}</span>
+          <span class="ob-pennant-meta ob-pennant-region">${region?esc(region.name):'Bölge seçilmedi'}</span>
+        </div>
+      </div>
+      <ol class="ob-steps" aria-label="Kurulum adımları">
+        ${STEPS.map((s,i)=>`
+          <li class="${i<idx?'done':''} ${i===idx?'current':''}" ${i===idx?'aria-current="step"':''}>
+            <span class="ob-step-num">${i<idx?'✓':i+1}</span><span class="ob-step-label">${s.label}</span>
+          </li>`).join('')}
+      </ol>`;
+  }
+
+  function refreshBannerText(){
+    const root=ui.root; if(!root) return;
+    const k=root.querySelector('[data-live="kingdom"
