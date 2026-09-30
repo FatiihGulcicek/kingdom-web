@@ -411,4 +411,51 @@
         <header class="ob-village-bar">
           <div class="ob-village-id">
             <span class="ob-village-emblem" aria-hidden="true">${civ?esc(civ.emblem):'♜'}</span>
-            <div><strong>${esc
+            <div><strong>${esc(kingdom.name)}</strong><span>${esc(profile.commanderName)} · Seviye ${kingdom.level}</span></div>
+          </div>
+          <ul class="ob-village-res" aria-label="Kaynaklar">
+            ${keys.map(k=>`<li title="${data.RESOURCES[k].label}">${data.RESOURCES[k].icon} <b>${kingdom.resources[k]}</b></li>`).join('')}
+          </ul>
+        </header>
+        <div class="ob-village-ground" aria-hidden="true"><div class="ob-village-plot"></div><span class="ob-village-keep">♜</span></div>
+        <div class="ob-village-card">
+          <h2>İlk köyün hazır</h2>
+          <p>${civ?esc(civ.name):''} halkı ${region?esc(region.name):''} bölgesine yerleşti. Bina yerleşimi ve inşaat bir sonraki aşamada bu ekrana gelecek.</p>
+          <div class="placeholder-actions">
+            <button type="button" class="ghost" data-action="exit">Giriş ekranına dön</button>
+            <button type="button" class="danger-ghost" data-action="restart">Kurulumu baştan yap</button>
+          </div>
+        </div>
+      </section>`;
+
+    root.querySelector('[data-action="exit"]')?.addEventListener('click',()=>ui.options.onExit?.());
+    root.querySelector('[data-action="restart"]')?.addEventListener('click',async()=>{
+      await store.repository.reset();
+      ui.draft={step:'commander',commanderName:ui.options.commanderName||'',kingdomName:'',civilizationId:null,regionId:null};
+      transition(renderFlow);
+    });
+  }
+
+  // ---------- public entry ----------
+
+  /**
+   * Mount onboarding into `root`. Shows the village placeholder if onboarding
+   * was already completed, otherwise resumes (or starts) the flow.
+   * @param {HTMLElement} root
+   * @param {OnboardingMountOptions} [options]
+   */
+  async function mount(root,options={}){
+    ui.root=root;
+    ui.options=options;
+    const [result,draft]=await Promise.all([store.repository.loadResult(),store.repository.loadDraft()]);
+    if(result&&result.profile&&result.profile.onboardingCompleted){ renderVillage(result); return; }
+
+    const prefill=(options.commanderName||'').trim();
+    ui.draft=draft&&STEPS.some(s=>s.id===draft.step)
+      ?draft
+      :{step:'commander',commanderName:prefill==='Misafir Komutan'?'':prefill,kingdomName:'',civilizationId:null,regionId:null};
+    renderFlow();
+  }
+
+  ns.mount=mount;
+})();
