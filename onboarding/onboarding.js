@@ -278,4 +278,83 @@
             <div id="obError" class="form-error ob-error" role="alert" aria-live="polite"></div>
             <div class="ob-actions">
               <button type="button" class="ghost ob-back" data-action="back">${idx===0?'Çıkış':'Geri'}</button>
-  
+              <button type="button" class="cta ob-next" data-action="next" ${ui.busy?'disabled':''}>
+                <span>${last?'Krallığı kur':'Devam'}</span>
+              </button>
+            </div>
+          </footer>
+        </div>
+      </section>`;
+    bindFlow();
+    const title=/** @type {HTMLElement|null} */(root.querySelector('#obTitle'));
+    title?.focus({preventScroll:true});
+  }
+
+  /** @param {string} message */
+  function showError(message){
+    const el=ui.root?.querySelector('#obError');
+    if(el) el.textContent=message;
+  }
+
+  /** @param {OnboardingStepId} step */
+  function goTo(step){
+    ui.draft.step=step;
+    persist();
+    transition(renderFlow);
+  }
+
+  async function next(){
+    if(ui.busy) return;
+    const error=stepError();
+    if(error){ showError(error); return; }
+    const idx=stepIndex();
+    if(idx<STEPS.length-1){ goTo(STEPS[idx+1].id); return; }
+
+    ui.busy=true;
+    try{
+      const result=await store.repository.complete(ui.draft);
+      transition(()=>renderVillage(result));
+    }catch(err){
+      showError(err instanceof Error?err.message:'Krallık kurulamadı. Seçimlerini kontrol edip tekrar dene.');
+    }finally{
+      ui.busy=false;
+    }
+  }
+
+  function back(){
+    const idx=stepIndex();
+    if(idx===0){ ui.options.onExit?.(); return; }
+    goTo(STEPS[idx-1].id);
+  }
+
+  function bindFlow(){
+    const root=ui.root; if(!root) return;
+
+    root.querySelectorAll('[data-action="next"]').forEach(b=>b.addEventListener('click',next));
+    root.querySelectorAll('[data-action="back"]').forEach(b=>b.addEventListener('click',back));
+
+    const input=/** @type {HTMLInputElement|null} */(root.querySelector('#obInput'));
+    if(input){
+      const key=/** @type {'commanderName'|'kingdomName'} */(input.dataset.bind);
+      input.addEventListener('input',()=>{
+        ui.draft[key]=input.value;
+        showError('');
+        refreshBannerText();
+        persist();
+      });
+      input.addEventListener('keydown',e=>{
+        if(e.key==='Enter'){ e.preventDefault(); input.blur(); next(); }
+      });
+    }
+
+    root.querySelectorAll('[data-suggest]').forEach(btn=>btn.addEventListener('click',()=>{
+      const name=/** @type {HTMLElement} */(btn).dataset.suggest||'';
+      ui.draft.kingdomName=name;
+      if(input) input.value=name;
+      showError('');
+      refreshBannerText();
+      persist();
+    }));
+
+    root.querySelector('[data-action="reroll"]')?.addEventListener('click',()=>{
+      const chips=root.querySelectorAll('[data-s
