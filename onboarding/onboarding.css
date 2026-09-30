@@ -84,7 +84,7 @@
 
 /* ---- text steps ---- */
 .ob-field{max-width:440px;font-size:12px}
-.ob-field input{font-size:16px;padding:12px 13px;min-height:48px}
+.ob-field input{font-size:16px;padding:12px 13px;min-height:48px} /* 16px prevents iOS zoom */
 .ob-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;max-width:560px}
 .ob-chip{
   min-height:40px;padding:8px 14px;border-radius:999px;cursor:pointer;
@@ -122,6 +122,7 @@
 .ob-region .ob-card-text{text-shadow:0 1px 6px #000c}
 .ob-region .ob-card-text span{color:#dfe6e2}
 
+/* terrain paintings (CSS only, no external assets) */
 [data-terrain="plains"].ob-region:before,[data-terrain="plains"].ob-village{background:
   repeating-linear-gradient(170deg,#ffffff08 0 2px,transparent 2px 14px),
   linear-gradient(180deg,#556b35 0,#3d5a2a 55%,#22361c 100%)}
