@@ -1,1 +1,29 @@
-<!doctype html><html lang="tr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><meta name="theme-color" content="#152516"/><link rel="manifest" href="/manifest.webmanifest"/><link rel="stylesheet" href="/styles.css"/><title>Kingdom Prototype</title></head><body><main id="app"></main><script src="/app.js"></script><script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}</script></body></html>
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
+  <meta name="theme-color" content="#0b1110"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <link rel="manifest" href="/manifest.webmanifest"/>
+  <link rel="stylesheet" href="/styles.css"/>
+  <title>Kingdom</title>
+</head>
+<body>
+  <main id="app"></main>
+  <div id="rotate-lock" aria-live="polite">
+    <div class="rotate-card">
+      <div class="rotate-icon">↻</div>
+      <h1>Telefonu yatay çevir</h1>
+      <p>Kingdom yalnızca yatay modda oynanır.</p>
+    </div>
+  </div>
+  <script src="/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(()=>{});
+    }
+  </script>
+</body>
+</html>
