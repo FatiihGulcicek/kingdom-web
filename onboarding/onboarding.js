@@ -111,4 +111,57 @@
 
   function refreshBannerText(){
     const root=ui.root; if(!root) return;
-    const k=root.querySelector('[data-live="kingdom"
+    const k=root.querySelector('[data-live="kingdom"]');
+    const c=root.querySelector('[data-live="commander"]');
+    if(k) k.textContent=ui.draft.kingdomName.trim()||'Adsız krallık';
+    if(c) c.textContent=ui.draft.commanderName.trim()||'Komutan';
+  }
+
+  // ---------- step bodies ----------
+
+  function commanderStep(){
+    return `
+      <label class="field ob-field">Komutan adı
+        <input id="obInput" data-bind="commanderName" value="${esc(ui.draft.commanderName)}" autocomplete="nickname" maxlength="20" placeholder="Örn. Fatih" enterkeyhint="next" />
+        <small>3–20 karakter. Harf, rakam, boşluk, - ve _ kullanılabilir.</small>
+      </label>`;
+  }
+
+  function kingdomStep(){
+    const chips=Array.from({length:3},()=>suggestKingdomName());
+    return `
+      <label class="field ob-field">Krallık adı
+        <input id="obInput" data-bind="kingdomName" value="${esc(ui.draft.kingdomName)}" autocomplete="off" maxlength="28" placeholder="Örn. Kuzey Diyarı" enterkeyhint="next" />
+        <small>3–28 karakter.</small>
+      </label>
+      <div class="ob-chips" aria-label="Ad önerileri">
+        ${[...new Set(chips)].map(n=>`<button type="button" class="ob-chip" data-suggest="${esc(n)}">${esc(n)}</button>`).join('')}
+        <button type="button" class="ob-chip ob-chip-ghost" data-action="reroll">Başka öner</button>
+      </div>`;
+  }
+
+  /** @param {Civilization} civ */
+  function civDetail(civ){
+    const groups=data.BONUS_CATEGORIES
+      .filter(cat=>civ.bonuses[cat].length)
+      .map(cat=>`
+        <div class="ob-bonus-group">
+          <span class="ob-bonus-cat" data-cat="${cat}">${data.BONUS_LABELS[cat]}</span>
+          <ul>${civ.bonuses[cat].map(b=>`<li><span>${esc(b.label)}</span><b class="good">${formatBonus(b.value,b.unit)}</b></li>`).join('')}</ul>
+        </div>`).join('');
+    return `
+      <div class="ob-detail" style="--accent:${civ.color}">
+        <h3><span aria-hidden="true">${esc(civ.emblem)}</span> ${esc(civ.name)}</h3>
+        <p>${esc(civ.description)}</p>
+        <div class="ob-bonuses">${groups}</div>
+      </div>`;
+  }
+
+  function civilizationStep(){
+    const selected=civById(ui.draft.civilizationId);
+    return `
+      <div class="ob-split">
+        <div class="ob-grid" role="radiogroup" aria-label="Medeniyetler">
+          ${data.CIVILIZATIONS.map(c=>`
+            <button type="button" role="radio" aria-checked="${c.id===ui.draft.civilizationId}" class="ob-card ob-civ" data-civ="${c.id}" style="--accent:${c.color}">
+              <span class="ob-civ-emblem" aria-hidden="tru
