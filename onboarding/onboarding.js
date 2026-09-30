@@ -215,3 +215,67 @@
         </div>
         ${selected?regionDetail(selected):'<div class="ob-detail ob-detail-empty"><p>Başlangıç kaynaklarını görmek için bir bölge seç.</p></div>'}
       </div>`;
+  }
+
+  function reviewStep(){
+    const d=ui.draft;
+    const civ=civById(d.civilizationId);
+    const region=regionById(d.regionId);
+    const res=region?store.startingResources(region.id):null;
+    const keys=/** @type {(keyof ResourceAmounts)[]} */(Object.keys(data.RESOURCES));
+    /** @param {string} label @param {string} value @param {OnboardingStepId} step */
+    const row=(label,value,step)=>`
+      <div class="ob-review-row">
+        <span>${label}</span><strong>${value}</strong>
+        <button type="button" class="ob-edit" data-goto="${step}" aria-label="${label} düzenle">Düzenle</button>
+      </div>`;
+    return `
+      <div class="ob-review">
+        <div class="ob-review-list">
+          ${row('Komutan',esc(d.commanderName.trim()),'commander')}
+          ${row('Krallık',esc(d.kingdomName.trim()),'kingdom')}
+          ${row('Medeniyet',civ?`${esc(civ.emblem)} ${esc(civ.name)}`:'—','civilization')}
+          ${row('Bölge',region?esc(region.name):'—','region')}
+        </div>
+        ${res?`
+        <div class="ob-review-res">
+          <span>Başlangıç kaynakları</span>
+          <ul>${keys.map(k=>`<li>${data.RESOURCES[k].icon}<b>${res[k]}</b></li>`).join('')}</ul>
+        </div>`:''}
+      </div>`;
+  }
+
+  /** @param {OnboardingStepId} step */
+  function stepBody(step){
+    switch(step){
+      case 'commander': return commanderStep();
+      case 'kingdom': return kingdomStep();
+      case 'civilization': return civilizationStep();
+      case 'region': return regionStep();
+      default: return reviewStep();
+    }
+  }
+
+  // ---------- render ----------
+
+  function renderFlow(){
+    const root=ui.root; if(!root) return;
+    const idx=stepIndex();
+    const step=STEPS[idx];
+    const last=idx===STEPS.length-1;
+    root.innerHTML=`
+      <section class="screen ob-screen">
+        <div class="scene-noise"></div>
+        <aside class="ob-rail">${bannerHtml()}</aside>
+        <div class="ob-main">
+          <header class="ob-head">
+            <span class="ob-count">Adım ${idx+1} / ${STEPS.length}</span>
+            <h2 id="obTitle" tabindex="-1">${step.title}</h2>
+            <p>${step.hint}</p>
+          </header>
+          <div class="ob-body">${stepBody(step.id)}</div>
+          <footer class="ob-foot">
+            <div id="obError" class="form-error ob-error" role="alert" aria-live="polite"></div>
+            <div class="ob-actions">
+              <button type="button" class="ghost ob-back" data-action="back">${idx===0?'Çıkış':'Geri'}</button>
+  
