@@ -357,4 +357,58 @@
     }));
 
     root.querySelector('[data-action="reroll"]')?.addEventListener('click',()=>{
-      const chips=root.querySelectorAll('[data-s
+      const chips=root.querySelectorAll('[data-suggest]');
+      chips.forEach(chip=>{
+        const n=suggestKingdomName();
+        /** @type {HTMLElement} */(chip).dataset.suggest=n;
+        chip.textContent=n;
+      });
+    });
+
+    root.querySelectorAll('[data-civ]').forEach(btn=>btn.addEventListener('click',()=>{
+      ui.draft.civilizationId=/** @type {HTMLElement} */(btn).dataset.civ||null;
+      persist();
+      renderFlow();
+      /** @type {HTMLElement|null} */(root.querySelector(`[data-civ="${ui.draft.civilizationId}"]`))?.focus({preventScroll:true});
+    }));
+
+    root.querySelectorAll('[data-region]').forEach(btn=>btn.addEventListener('click',()=>{
+      ui.draft.regionId=/** @type {HTMLElement} */(btn).dataset.region||null;
+      persist();
+      renderFlow();
+      /** @type {HTMLElement|null} */(root.querySelector(`[data-region="${ui.draft.regionId}"]`))?.focus({preventScroll:true});
+    }));
+
+    root.querySelectorAll('[data-goto]').forEach(btn=>btn.addEventListener('click',()=>{
+      goTo(/** @type {OnboardingStepId} */(/** @type {HTMLElement} */(btn).dataset.goto));
+    }));
+
+    // Arrow-key navigation inside radio groups.
+    root.querySelectorAll('[role="radiogroup"]').forEach(group=>group.addEventListener('keydown',e=>{
+      const ev=/** @type {KeyboardEvent} */(e);
+      if(!['ArrowRight','ArrowLeft','ArrowDown','ArrowUp'].includes(ev.key)) return;
+      const items=/** @type {HTMLElement[]} */(Array.from(group.querySelectorAll('[role="radio"]')));
+      const i=items.indexOf(/** @type {HTMLElement} */(document.activeElement));
+      if(i<0) return;
+      ev.preventDefault();
+      const dir=ev.key==='ArrowRight'||ev.key==='ArrowDown'?1:-1;
+      items[(i+dir+items.length)%items.length].click();
+    }));
+  }
+
+  // ---------- village placeholder ----------
+
+  /** @param {OnboardingResult} result */
+  function renderVillage(result){
+    const root=ui.root; if(!root) return;
+    const {profile,kingdom}=result;
+    const civ=civById(kingdom.civilizationId);
+    const region=regionById(kingdom.regionId);
+    const keys=/** @type {(keyof ResourceAmounts)[]} */(Object.keys(data.RESOURCES));
+    root.innerHTML=`
+      <section class="screen ob-village" data-terrain="${region?region.terrain:'plains'}" style="--banner:${civ?civ.color:'#2c4034'}">
+        <div class="scene-noise"></div>
+        <header class="ob-village-bar">
+          <div class="ob-village-id">
+            <span class="ob-village-emblem" aria-hidden="true">${civ?esc(civ.emblem):'♜'}</span>
+            <div><strong>${esc
