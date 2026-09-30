@@ -164,4 +164,54 @@
         <div class="ob-grid" role="radiogroup" aria-label="Medeniyetler">
           ${data.CIVILIZATIONS.map(c=>`
             <button type="button" role="radio" aria-checked="${c.id===ui.draft.civilizationId}" class="ob-card ob-civ" data-civ="${c.id}" style="--accent:${c.color}">
-              <span class="ob-civ-emblem" aria-hidden="tru
+              <span class="ob-civ-emblem" aria-hidden="true">${esc(c.emblem)}</span>
+              <span class="ob-card-text">
+                <span class="ob-focus">${data.BONUS_LABELS[c.focus]}</span>
+                <strong>${esc(c.name)}</strong>
+                <span>${esc(c.tagline)}</span>
+              </span>
+            </button>`).join('')}
+        </div>
+        ${selected?civDetail(selected):'<div class="ob-detail ob-detail-empty"><p>Bonuslarını görmek için bir medeniyet seç.</p></div>'}
+      </div>`;
+  }
+
+  /** @param {StartingRegion} region */
+  function regionDetail(region){
+    const res=store.startingResources(region.id);
+    const civ=civById(ui.draft.civilizationId);
+    const recommended=civ&&region.recommendedCivilizationIds.includes(civ.id);
+    const keys=/** @type {(keyof ResourceAmounts)[]} */(Object.keys(data.RESOURCES));
+    return `
+      <div class="ob-detail" data-terrain="${region.terrain}">
+        <h3>${esc(region.name)}</h3>
+        <p>${esc(region.description)}</p>
+        <div class="ob-tags">
+          <span class="ob-tag" data-difficulty="${region.difficulty}">Zorluk: ${data.DIFFICULTY_LABELS[region.difficulty]}</span>
+          ${recommended?`<span class="ob-tag ob-tag-good">${esc(civ.name)} için uygun</span>`:''}
+        </div>
+        <ul class="ob-res">
+          ${keys.map(k=>{
+            const mod=region.resourceModifiers[k]||0;
+            return `<li><span>${data.RESOURCES[k].icon} ${data.RESOURCES[k].label}</span><b>${res[k]}</b>${mod?`<em class="${mod>0?'good':'bad'}">${formatModifier(mod)}</em>`:'<em></em>'}</li>`;
+          }).join('')}
+        </ul>
+      </div>`;
+  }
+
+  function regionStep(){
+    const selected=regionById(ui.draft.regionId);
+    const civ=civById(ui.draft.civilizationId);
+    return `
+      <div class="ob-split">
+        <div class="ob-grid" role="radiogroup" aria-label="Başlangıç bölgeleri">
+          ${data.REGIONS.map(r=>`
+            <button type="button" role="radio" aria-checked="${r.id===ui.draft.regionId}" class="ob-card ob-region" data-region="${r.id}" data-terrain="${r.terrain}">
+              <span class="ob-card-text">
+                <strong>${esc(r.name)}</strong>
+                <span>${data.DIFFICULTY_LABELS[r.difficulty]}${civ&&r.recommendedCivilizationIds.includes(civ.id)?' · Önerilen':''}</span>
+              </span>
+            </button>`).join('')}
+        </div>
+        ${selected?regionDetail(selected):'<div class="ob-detail ob-detail-empty"><p>Başlangıç kaynaklarını görmek için bir bölge seç.</p></div>'}
+      </div>`;
