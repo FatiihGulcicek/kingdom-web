@@ -3,26 +3,29 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
-  <meta name="theme-color" content="#0b1110"/>
+  <meta name="theme-color" content="#070c0a"/>
+  <meta name="color-scheme" content="dark"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
   <link rel="manifest" href="/manifest.webmanifest"/>
   <link rel="stylesheet" href="/styles.css"/>
-  <title>Kingdom</title>
+  <title>Kingdom · Age of Conquest</title>
 </head>
 <body>
   <main id="app"></main>
   <div id="rotate-lock" aria-live="polite">
     <div class="rotate-card">
       <div class="rotate-icon">↻</div>
-      <h1>Telefonu yatay çevir</h1>
-      <p>Kingdom yalnızca yatay modda oynanır.</p>
+      <h1>Telefonunu yatay çevir</h1>
+      <p>Kingdom savaş ve şehir ekranları yatay kullanım için tasarlandı.</p>
     </div>
   </div>
+  <noscript>Bu oyun JavaScript gerektirir.</noscript>
   <script src="/app.js"></script>
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(()=>{});
+    if('serviceWorker' in navigator){
+      window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
     }
   </script>
 </body>
