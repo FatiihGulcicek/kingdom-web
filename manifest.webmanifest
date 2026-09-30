@@ -1,1 +1,10 @@
-{"name":"Kingdom Prototype","short_name":"Kingdom","start_url":"/","display":"standalone","background_color":"#102015","theme_color":"#152516","icons":[]}
+{
+  "name": "Kingdom",
+  "short_name": "Kingdom",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#08100d",
+  "theme_color": "#0b1110",
+  "icons": []
+}
