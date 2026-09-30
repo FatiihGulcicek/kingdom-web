@@ -1,5 +1,145 @@
-const state={level:Number(localStorage.getItem('townhallLevel')||1),wood:2400,stone:1800,food:3100,gold:950};
 const app=document.querySelector('#app');
-function render(){const pos=((state.level-1)/9)*100;app.innerHTML=`<div class="game"><header class="topbar"><div class="player"><strong>Komutan</strong><span>Krallık Prototipi</span></div><div class="res">🪵 ${state.wood}</div><div class="res">🪨 ${state.stone}</div><div class="res">🌾 ${state.food}</div><div class="res">🪙 ${state.gold}</div></header><section class="village"><div class="terrain"></div><div class="hint">Binaya dokun ve yükselt 🏰</div><button class="townhall" id="townhall" aria-label="Belediye Binası Seviye ${state.level}"><span class="townhall-sprite" style="background-position:center ${pos}%"></span><span class="badge">Belediye Binası · Seviye ${state.level}</span></button></section><nav class="bottom"><button class="action">⚒️ İnşa</button><button class="action primary" id="upgradeBtn">⬆️ Yükselt</button><button class="action">🗺️ Dünya</button></nav><div class="sheet" id="sheet"><h2>Belediye Binası · Seviye ${state.level}</h2><p>Yeni binaların ve birliklerin kilidini açan şehrin ana yapısı.</p><div class="upgrade"><button class="close" id="closeSheet">Kapat</button><button class="up" id="confirmUpgrade">${state.level<10?'Seviye '+(state.level+1)+' yap':'Maksimum seviye'}</button></div></div></div>`;bind()}
-function bind(){const sheet=document.querySelector('#sheet');document.querySelector('#townhall').onclick=()=>sheet.classList.add('open');document.querySelector('#upgradeBtn').onclick=()=>sheet.classList.add('open');document.querySelector('#closeSheet').onclick=()=>sheet.classList.remove('open');document.querySelector('#confirmUpgrade').onclick=()=>{if(state.level<10){state.level++;localStorage.setItem('townhallLevel',state.level);render()}}}
+
+const state={
+  screen:'loading',
+  authMode:'login',
+  loadingProgress:0,
+  playerName:localStorage.getItem('kingdomPlayerName')||''
+};
+
+function setScreen(screen){
+  state.screen=screen;
+  render();
+}
+
+function render(){
+  if(state.screen==='loading') return renderLoading();
+  if(state.screen==='auth') return renderAuth();
+  return renderGameShell();
+}
+
+function renderLoading(){
+  app.innerHTML=`
+    <section class="screen loading-screen">
+      <div class="loading-vignette"></div>
+      <div class="brand-mark" aria-label="Kingdom">
+        <div class="crown">♛</div>
+        <h1>KINGDOM</h1>
+        <p>Rise of Empires</p>
+      </div>
+      <div class="loading-panel">
+        <div class="loading-text"><span>Krallık hazırlanıyor</span><strong id="loadingPercent">0%</strong></div>
+        <div class="loading-track"><span id="loadingBar"></span></div>
+        <small>© 2026 Kingdom Project</small>
+      </div>
+    </section>
+  `;
+
+  const bar=document.querySelector('#loadingBar');
+  const percent=document.querySelector('#loadingPercent');
+  const timer=setInterval(()=>{
+    state.loadingProgress=Math.min(100,state.loadingProgress+Math.ceil(Math.random()*8));
+    bar.style.width=state.loadingProgress+'%';
+    percent.textContent=state.loadingProgress+'%';
+    if(state.loadingProgress>=100){
+      clearInterval(timer);
+      setTimeout(()=>setScreen(state.playerName?'game':'auth'),300);
+    }
+  },120);
+}
+
+function authPanel(mode){
+  const login=mode==='login';
+  return `
+    <div class="auth-copy">
+      <span class="eyebrow">KRALLIĞINA DÖN</span>
+      <h1>${login?'Komutan, hoş geldin.':'Yeni bir krallık kur.'}</h1>
+      <p>${login?'Orduların seni bekliyor. Hesabına giriş yap ve kaldığın yerden devam et.':'Adını tarihe yaz. Hesabını oluştur ve ilk şehrini kurmaya başla.'}</p>
+    </div>
+    <form class="auth-card" id="authForm">
+      <div class="auth-tabs">
+        <button type="button" data-mode="login" class="${login?'active':''}">Giriş Yap</button>
+        <button type="button" data-mode="register" class="${!login?'active':''}">Kayıt Ol</button>
+      </div>
+      ${!login?'<label>Komutan adı<input id="playerName" name="playerName" autocomplete="nickname" placeholder="Örn. Fatih" required maxlength="20"/></label>':''}
+      <label>E-posta<input name="email" type="email" autocomplete="email" placeholder="komutan@kingdom.com" required/></label>
+      <label>Şifre<input name="password" type="password" autocomplete="${login?'current-password':'new-password'}" placeholder="••••••••" minlength="6" required/></label>
+      ${!login?'<label>Şifre tekrar<input name="passwordConfirm" type="password" autocomplete="new-password" placeholder="••••••••" minlength="6" required/></label>':''}
+      <button class="cta" type="submit">${login?'Krallığa Gir':'Krallığı Kur'}</button>
+      <div class="auth-divider"><span>veya</span></div>
+      <button class="social" type="button">G Google ile devam et</button>
+      <p class="legal">Devam ederek kullanım koşullarını ve gizlilik politikasını kabul etmiş olursun.</p>
+    </form>
+  `;
+}
+
+function renderAuth(){
+  app.innerHTML=`
+    <section class="screen auth-screen">
+      <div class="auth-backdrop"></div>
+      <div class="auth-layout">
+        ${authPanel(state.authMode)}
+      </div>
+    </section>
+  `;
+
+  document.querySelectorAll('[data-mode]').forEach(btn=>{
+    btn.onclick=()=>{
+      state.authMode=btn.dataset.mode;
+      renderAuth();
+    };
+  });
+
+  document.querySelector('#authForm').onsubmit=(event)=>{
+    event.preventDefault();
+    const data=new FormData(event.currentTarget);
+    if(state.authMode==='register'){
+      if(data.get('password')!==data.get('passwordConfirm')){
+        showToast('Şifreler eşleşmiyor.');
+        return;
+      }
+      state.playerName=(data.get('playerName')||'Komutan').trim();
+    } else {
+      state.playerName=localStorage.getItem('kingdomPlayerName')||'Komutan';
+    }
+    localStorage.setItem('kingdomPlayerName',state.playerName);
+    showToast(state.authMode==='register'?'Krallığın kuruldu.':'Giriş başarılı.');
+    setTimeout(()=>setScreen('game'),450);
+  };
+}
+
+function renderGameShell(){
+  app.innerHTML=`
+    <section class="screen game-shell">
+      <div class="game-placeholder">
+        <span class="eyebrow">AŞAMA 1 TAMAMLANDI</span>
+        <h1>Hoş geldin, ${escapeHtml(state.playerName||'Komutan')}</h1>
+        <p>Bir sonraki adımda ana köy ekranını burada kuracağız.</p>
+        <button id="logoutBtn" class="ghost">Çıkış yap</button>
+      </div>
+    </section>
+  `;
+  document.querySelector('#logoutBtn').onclick=()=>{
+    localStorage.removeItem('kingdomPlayerName');
+    state.playerName='';
+    state.authMode='login';
+    setScreen('auth');
+  };
+}
+
+function showToast(message){
+  const old=document.querySelector('.toast');
+  if(old) old.remove();
+  const toast=document.createElement('div');
+  toast.className='toast';
+  toast.textContent=message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(()=>toast.classList.add('show'));
+  setTimeout(()=>toast.remove(),1800);
+}
+
+function escapeHtml(value){
+  return value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+
 render();
