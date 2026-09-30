@@ -32,6 +32,11 @@ function setScreen(screen){
 function render(){
   if(state.screen==='loading') return renderLoading();
   if(state.screen==='auth') return renderAuth();
+  // Onboarding hook: first-player flow + village placeholder (onboarding/*.js).
+  const onboarding=window.KingdomOnboarding;
+  if(onboarding&&onboarding.mount){
+    return onboarding.mount(app,{commanderName:state.playerName,onExit:()=>setScreen('auth')});
+  }
   return renderGameShell();
 }
 
